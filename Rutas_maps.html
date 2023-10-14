@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Rutas azure</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js'></script>
+
+    <script type="text/javascript" src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.js"></script>
+    <script type="text/javascript">
+        var map, datasource, routeLayer;
+
+        function GetMap() {
+            // Crea un mapa en el elemento "mapDiv" y lo centra en una ubicación específica.
+            map = new atlas.Map('mapDiv', {
+                center: [-98.193042, 19.046026], // Coordenadas de Puebla, México
+                zoom: 13,
+                view: 'Auto',
+                authOptions: {
+                    authType: 'subscriptionKey',
+                    subscriptionKey: 'CWfOCbYY2R3bV8CDeqD9biMVp4nqztcIixNYAe1Olxw'
+                }
+            });
+
+            // Escucha el evento 'ready' del mapa.
+            map.events.add('ready', function () {
+                // Una vez que el mapa está listo, puedes agregar la fuente de datos.
+                datasource = new atlas.source.DataSource();
+                routeLayer = new atlas.layer.LineLayer(datasource, null);
+                map.sources.add(datasource);
+                map.layers.add(routeLayer);
+            });
+        }
+
+        // Llama a la función GetMap cuando se carga la página.
+        window.onload = GetMap;
+
+        function trazarRuta() {
+            var origenInput = document.getElementById('origen');
+            var destinoInput = document.getElementById('destino');
+            var rutaInfoDiv = document.getElementById('rutaInfo');
+
+            var origenCoords = origenInput.value.split(',').map(parseFloat);
+            var destinoCoords = destinoInput.value.split(',').map(parseFloat);
+            if (isNaN(origenCoords[0]) || isNaN(origenCoords[1]) || isNaN(destinoCoords[0]) || isNaN(destinoCoords[1])) {
+                rutaInfoDiv.textContent = "Por favor, ingresa coordenadas válidas.";
+                return;
+            }
+
+            rutaInfoDiv.textContent = "Calculando la ruta...";
+
+            var directionsURL = `https://atlas.microsoft.com/route/directions/json?api-version=2.0&query=${origenCoords[1]},${origenCoords[0]}:${destinoCoords[1]},${destinoCoords[0]}&subscription-key=CWfOCbYY2R3bV8CDeqD9biMVp4nqztcIixNYAe1Olxw`;
+
+            fetch(directionsURL)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.routes && data.routes.length > 0) {
+                        var distancia = data.routes[0].summary.lengthInMeters / 1000;
+                        rutaInfoDiv.textContent = `Distancia de la ruta: ${distancia.toFixed(2)} km`;
+
+                        // Agregar marcadores para origen y destino
+                        var origenMarker = new atlas.Shape(new atlas.data.Point(origenCoords), {
+                            iconOptions: {
+                                image: 'pin-round-blue.png', // Personaliza el icono del marcador
+                                allowOverlap: true
+                            }
+                        });
+
+                        var destinoMarker = new atlas.Shape(new atlas.data.Point(destinoCoords), {
+                            iconOptions: {
+                                image: 'pin-round-red.png', // Personaliza el icono del marcador
+                                allowOverlap: true
+                            }
+                        });
+
+                        // Agrega una propiedad personalizada para mostrar información adicional.
+                        origenMarker.setProperties({
+                            name: 'Origen'
+                        });
+
+                        destinoMarker.setProperties({
+                            name: 'Destino'
+                        });
+
+                        datasource.add([origenMarker, destinoMarker]);
+
+                        // Agregar la ruta a la capa
+                        var routeShape = new atlas.data.LineString(data.routes[0].geometry.coordinates);
+                        var routeFeature = new atlas.data.Feature(routeShape);
+                        datasource.add([routeFeature]);
+                    } else {
+                        rutaInfoDiv.textContent = "No se encontró una ruta.";
+                    }
+                })
+                .catch(error => {
+                    rutaInfoDiv.textContent = "Error al calcular la ruta: " + error.message;
+                });
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h5 class="card-title">Menú</h5>
+                <ul class="list-group">
+                    <li class="list-group-item"><a href="ejemplomapsazure.html">Ejemplo puntos fijos</a></li>
+                    <li class="list-group-item"><a href="Rutas_maps.html">Rutas Maps</a></li>
+                </ul>
+            </div>
+            <div class="col-md-12">
+                <div id="mapDiv" style="width: 100%; height: 450px;"></div>
+                <div id="rutaInfo" class="mt-4"></div>
+                <form id="routeForm" class="mt-4">
+                    <div class="form-group">
+                        <label for="origen">Coordenadas de Origen:</label>
+                        <input type="text" id="origen" class="form-control" placeholder="Latitud, Longitud">
+                    </div>
+                    <div class="form-group">
+                        <label for="destino">Coordenadas de Destino:</label>
+                        <input type="text" id="destino" class="form-control" placeholder="Latitud, Longitud">
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="trazarRuta()">Trazar Ruta</button>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

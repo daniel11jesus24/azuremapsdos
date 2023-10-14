@@ -3,90 +3,144 @@
 
 <head>
     <title>Mapa azuremaps</title>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js'></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script type="text/javascript" src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.js"></script>
-    <script type="text/javascript">
+</head>
+
+<body>
+     
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12"> 
+                        <h5 class="card-title">Menú</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item"><a href="ejemplomapsazure.html">Ejemplo puntos fijos</a></li>
+                            <li class="list-group-item"><a href="Rutas_maps.html">Rutas Maps</a></li>
+                        </ul>
+            </div>
+
+            <div class="col-md-12">
+                <h5 class="card-title">Mapa con nodos fijos</h5>
+                <div id="mapDiv" style="width: 100%; height: 500px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
         var map, datasource;
 
-            function GetMap() {
-                // Crea un mapa en el elemento "mapDiv" y lo centra en una ubicación específica.
-                map = new atlas.Map('mapDiv', {
-                    center: [-98.193042, 19.046026], // Coordenadas de Puebla, México
-                    zoom: 13,
-                    view: 'Auto',
-                    authOptions: {
-                        authType: 'subscriptionKey',
-                        subscriptionKey: 'CWfOCbYY2R3bV8CDeqD9biMVp4nqztcIixNYAe1Olxw'
-                    }
+        function GetMap() {
+            // Crea un mapa en el elemento "mapDiv" y lo centra en una ubicación específica.
+            map = new atlas.Map('mapDiv', {
+                center: [-98.193042, 19.046026], // Coordenadas de Puebla, México
+                zoom: 13,
+                view: 'Auto',
+                authOptions: {
+                    authType: 'subscriptionKey',
+                    subscriptionKey: 'CWfOCbYY2R3bV8CDeqD9biMVp4nqztcIixNYAe1Olxw'
+                }
+            });
+
+            // Escucha el evento 'ready' del mapa.
+            map.events.add('ready', function () {
+                // Una vez que el mapa está listo, puedes agregar la fuente de datos.
+                datasource = new atlas.source.DataSource();
+                map.sources.add(datasource);
+
+                // Luego, agrega marcadores u otras capas a la fuente de datos y renderízalos en el mapa.
+                AddMarkers();
+            });
+        }
+
+        
+    function AddMarkers() {
+            // Agrega marcadores para los nodos por defecto.
+            var nodes = [
+                {
+                    name: 'Universidad Tecnológica de Puebla',
+                    coordinates: [-98.15190247952451, 19.05651037601117]
+                },
+                {
+                    name: 'Catedral de la Ciudad de Puebla',
+                    coordinates: [-98.194260, 19.043536]
+                },
+                {
+                    name: 'Fuerte de Loreto',
+                    coordinates: [-98.179803, 19.057880]
+                },
+                {
+                    name: 'Fuente de los Frailes',
+                    coordinates: [-98.187890, 19.040117]
+                }
+            ];
+
+            nodes.forEach(function (node) {
+            var marker = new atlas.Shape(new atlas.data.Point(node.coordinates), {
+                iconOptions: {
+                    image: 'pin-round-blue.png',
+                    allowOverlap: true
+                },
+                properties: {
+                    name: node.name, // Agrega la propiedad 'name' al marcador
+                    icon: 'pin-round-blue.png' // Icono opcional para la capa de texto
+                }
+            });
+
+                // Agrega una propiedad personalizada para mostrar información adicional.
+                marker.setProperties({
+                    name: node.name
                 });
 
-                // Escucha el evento 'ready' del mapa.
-                map.events.add('ready', function () {
-                    // Una vez que el mapa está listo, puedes agregar la fuente de datos.
-                    datasource = new atlas.source.DataSource();
-                    map.sources.add(datasource);
-
-                    // Luego, agrega marcadores u otras capas a la fuente de datos y renderízalos en el mapa.
-                    AddMarkers();
-                });
-            }
-
-            function AddMarkers() {
-                // Agrega marcadores para los nodos por defecto.
-                var nodes = [
-                    { 
-                        name: 'Universidad Tecnológica de Puebla',
-                        coordinates: [ -98.15190247952451, 19.05651037601117]
-                    },
-                    {
-                        name: 'Catedral de la Ciudad de Puebla',
-                        coordinates: [-98.194260, 19.043536]
-                    },
-                    {
-                        name: 'Fuerte de Loreto',
-                        coordinates: [-98.179803, 19.057880]
-                    },
-                    {
-                        name: 'Fuente de los Frailes',
-                        coordinates: [-98.187890, 19.040117]
-                    }
-                ];
-
-                nodes.forEach(function (node) {
-                    var marker = new atlas.Shape(new atlas.data.Point(node.coordinates), {
-                        iconOptions: {
-                            image: 'pin-round-blue.png', // Personaliza el icono del marcador
-                            allowOverlap: true
-                        }
+                // Verifica si marker y marker.events existen antes de agregar el evento.
+                if (marker && marker.events) {
+                    marker.events.add('mouseover', function (e) {
+                        var properties = e.target.getProperties();
+                        var popup = new atlas.Popup({
+                            content: '<div>' + properties.name + '</div>',
+                            position: e.target.getCoordinates()
+                        });
+                        popup.open(map);
                     });
 
-                    // Agrega una propiedad personalizada para mostrar información adicional.
-                    marker.setProperties({
-                        name: node.name
+                    // Agrega un evento de 'mouseout' para cerrar la ventana emergente.
+                    marker.events.add('mouseout', function () {
+                        map.popups.closeAll();
                     });
+                }
 
-                    datasource.add([marker]);
-                });
+                datasource.add([marker]);
+            });
 
-                // Renderiza el mapa.
-                map.layers.add(new atlas.layer.SymbolLayer(datasource));
+            // Renderiza el mapa.
+            map.layers.add(new atlas.layer.SymbolLayer(datasource));// Crea una nueva capa de texto para mostrar las etiquetas de los nodos.
+        var labelLayer = new atlas.layer.SymbolLayer(datasource, null, {
+            iconOptions: {
+                image: ['get', 'icon'],
+                allowOverlap: true
+            },
+            textOptions: {
+                textField: ['get', 'name'], // Usa la propiedad 'name' como texto de etiqueta
+                size: 12,
+                color: 'black',
+                offset: [0, -30] // Ajusta la posición de la etiqueta
             }
+        });
 
-            // Llama a la función GetMap cuando se carga la página.
-            window.onload = GetMap;
+        map.layers.add(labelLayer);
+    }
+
+        // Llama a la función GetMap cuando se carga la página.
+        window.onload = GetMap;
     </script>
     <style>
         /* Estilo personalizado para el marcador */
         .azure-maps-icon {
             width: 50px;
-            height: 50px;
+            height: 5px;
         }
     </style>
-</head>
-
-<body onload="GetMap();">
-   <center>
-    <div id="mapDiv" style="width: 100%; height: 600px;"></div>
-   </center>
 </body>
 
 </html>

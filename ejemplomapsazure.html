@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" type="text/css">
     <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
 
-    <!-- Agrega una referencia al archivo JavaScript del Módulo de Servicios de Azure Maps. -->
+    <!-- Agrega una referencia al archivo JavaScript del Modulo de Servicios de Azure Maps. -->
     <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas-service.min.js"></script>
 
     <script>
@@ -18,58 +18,42 @@
         var map, datasource, routeURL;
         var viaMidpoint = false;
 
-        // Función para cambiar las clases de camiones de material peligroso.
-        function Hazmat() {
-            var currentHazmat = document.getElementById('hazmat').value;
-            var p = currentHazmat.length;
-            var n = parseInt(currentHazmat.charAt(p - 1));
-            if (n == 9) {
-                n = 0;
-            }
-            ++n;
-            document.getElementById("hazmat").value = currentHazmat.substr(0, p - 1) + n.toString();
-        }
-
-        // Comprueba si se ha seleccionado el punto intermedio de Chicago.
-        function checkMidpoint() {
-            viaMidpoint = document.getElementById("").checked;
-        }
 
         // InitMap se llama una vez cuando se carga el cuerpo HTML.
         function InitMap() {
             // Instancia un objeto de mapa.
             map = new atlas.Map("myMap", {
-                center: [-98.193042, 19.046026], // Coordenadas de Puebla, México
+                center: [-98.193042, 19.046026], // Coordenadas de Puebla, Mexico
                 zoom: 13,
                 view: 'Auto',
 
-                // Agrega tu clave de suscripción de Azure Maps al SDK del mapa.
+                // Agrega tu clave de suscripcion de Azure Maps al SDK del mapa.
                 authOptions: {
                     authType: 'subscriptionKey',
                     subscriptionKey: 'KuNtnNxCU5ya_88G2HxkMZ8b1Ynx-Znak7J1jkSDM-4'
                 }
             });
 
-            // Usa SubscriptionKeyCredential con una clave de suscripción.
+            // Usa SubscriptionKeyCredential con una clave de suscripcion.
             var subscriptionKeyCredential = new atlas.service.SubscriptionKeyCredential(atlas.getSubscriptionKey());
 
-            // Usa subscriptionKeyCredential para crear un canalización (pipeline).
+            // Usa subscriptionKeyCredential para crear un canalizacion (pipeline).
             var pipeline = atlas.service.MapsURL.newPipeline(subscriptionKeyCredential);
 
             // Construye el objeto RouteURL.
             routeURL = new atlas.service.RouteURL(pipeline);
 
-            // Espera a que los recursos del mapa estén listos antes de agregarlos.
+            // Espera a que los recursos del mapa esten listos antes de agregarlos.
             map.events.add('ready', function () {
-                // Crea una fuente de datos y agrégala al mapa.
+                // Crea una fuente de datos y agregala al mapa.
                 datasource = new atlas.source.DataSource();
                 map.sources.add(datasource);
             });
         }
 
-        // GetMap se llama cada vez que el usuario hace clic en el botón "Go...".
+        // GetMap se llama cada vez que el usuario hace clic en el boton "Vamos".
         function GetMap() {
-            // Agrega una capa para representar las líneas de la ruta y haz que se represente debajo de la capa de 'labels' del mapa.
+            // Agrega una capa para representar las lineas de la ruta y haz que se represente debajo de la capa de 'labels' del mapa.
             map.layers.add(new atlas.layer.LineLayer(datasource, null, {
                 strokeColor: ['get', 'strokeColor'],
                 strokeWidth: ['get', 'strokeWidth'],
@@ -91,7 +75,7 @@
                 filter: ['any', ['==', ['geometry-type'], 'Point'], ['==', ['geometry-type'], 'MultiPoint']]
             }));
 
-            // Agrega el flujo de tráfico al mapa (agrega una capa de "flow").
+            // Agrega el flujo de trafico al mapa (agrega una capa de "flow").
             map.setTraffic({
                 incidents: false,
                 flow: "relative"
@@ -158,30 +142,30 @@
             });
 
             // Agrega los datos a la fuente de datos. Esto agrega los iconos de marcador.
-            // La primera llamada a datasource utiliza setShapes para eliminar toda la geometría de ruta anterior.
+            // La primera llamada a datasource utiliza setShapes para eliminar toda la geometria de ruta anterior.
             datasource.setShapes([startPoint, midPoint, endPoint]);
 
             // Ajusta la ventana del mapa a la caja delimitadora definida por las posiciones de inicio y final.
-            // Agrega más puntos a los datos de la caja delimitadora si hay puntos intermedios en la ruta.
+            // Agrega mas puntos a los datos de la caja delimitadora si hay puntos intermedios en la ruta.
             map.setCamera({
                 bounds: atlas.data.BoundingBox.fromData([startPoint, midPoint, endPoint]),
                 padding: 100
             });
 
-            // Puntos de entrada a routeURL. Mínimo de dos (puntos de inicio y final).
+            // Puntos de entrada a routeURL. Minimo de dos (puntos de inicio y final).
             var coordinates = [[startPoint.geometry.coordinates[0], startPoint.geometry.coordinates[1]]];
             if (viaMidpoint) {
                 coordinates.push([midPoint.geometry.coordinates[0], midPoint.geometry.coordinates[1]]);
             }
             coordinates.push([endPoint.geometry.coordinates[0], endPoint.geometry.coordinates[1]]);
 
-            // Define una función interna para encontrar una ruta y actualizar la interfaz de usuario.
+            // Define una funcion interna para encontrar una ruta y actualizar la interfaz de usuario.
             function GetRoute(milliseconds, mode, vWidth, vHeight, vLength, vLoad, strokeClr, strokeWidth, index, docKm, docH) {
                 document.getElementById(docKm).textContent = "buscando...";
                 document.getElementById(docH).textContent = "";
 
-                // El modo puede ser uno de los siguientes: bicycle, bus, car, motorcycle, pedestrian, taxi, truck, van.
-                // Las dimensiones del vehículo están en metros.
+                // El modo puede ser uno de los siguientes: bicycle, bus, car, motorcycle, pedestrian, taxi, truck.
+                // Las dimensiones del vehiculo estan en metros.
                 // El tipo de carga solo se considera para camiones.
                 routeURL.calculateRouteDirections(atlas.service.Aborter.timeout(milliseconds), coordinates, {
                     travelMode: mode,
@@ -190,15 +174,15 @@
                     vehicleLength: vLength,
                     vehicleLoadType: vLoad
                 }).then((directions) => {
-                    // Obtiene las características de datos de la respuesta.
+                    // Obtiene las caracteristicas de datos de la respuesta.
                     var data = directions.geojson.getFeatures();
 
-                    // Obtiene la línea de la ruta y agrega algunas propiedades de estilo a la misma.
+                    // Obtiene la linea de la ruta y agrega algunas propiedades de estilo a la misma.
                     var routeLine = data.features[0];
                     routeLine.properties.strokeColor = strokeClr;
                     routeLine.properties.strokeWidth = strokeWidth;
 
-                    // Agrega la línea de ruta a la fuente de datos.
+                    // Agrega la linea de ruta a la fuente de datos.
                     datasource.add(routeLine, index);
 
                     // Calcula la distancia y el tiempo de viaje.
@@ -223,6 +207,7 @@
             GetRoute(20000, "bicycle", 1, 2, 2, null, '#053305', 3, 2, "bicyclekm", "bicycleh");
         }
     </script>
+    
     <style>
         html,
         body {
@@ -374,5 +359,4 @@
 
     <div id="myMap"></div>
 </body>
-
 </html>
